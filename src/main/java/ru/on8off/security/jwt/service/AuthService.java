@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,7 @@ public class AuthService implements UserDetailsService {
                 .compact();
     }
 
-    public void authenticate(String jwtString) {
+    public void authenticate(String jwtString, WebAuthenticationDetails details) {
         Claims claims;
         try {
             claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(jwtString).getBody();
@@ -67,6 +68,7 @@ public class AuthService implements UserDetailsService {
 
         var user = new User(username, "", roles);
         var auth =  new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities());
+        auth.setDetails(details);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 

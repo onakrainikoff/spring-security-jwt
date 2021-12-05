@@ -16,6 +16,8 @@ import org.springframework.security.web.access.expression.DefaultWebSecurityExpr
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.on8off.security.jwt.filter.AuthFilter;
 
+import javax.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableGlobalMethodSecurity(
         prePostEnabled = true,
@@ -29,7 +31,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-            .httpBasic().disable()
+            .exceptionHandling().authenticationEntryPoint(
+                    (request, response, ex) -> { response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());}
+            )
+            .and().httpBasic().disable()
             .csrf().disable()
             .logout().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)

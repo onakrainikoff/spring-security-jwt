@@ -37,14 +37,14 @@ class AuthControllerTest {
         headers.put("username", List.of("admin1"));
         headers.put("password", List.of("admin123"));
         response = testRestTemplate.exchange(host + port + "/auth/login", HttpMethod.POST, new HttpEntity<>(headers), String.class);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        Assertions.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         System.out.println(response.getBody());
 
         headers = new HttpHeaders();
         headers.put("username", List.of("admin"));
         headers.put("password", List.of("admin1234"));
         response = testRestTemplate.exchange(host + port + "/auth/login", HttpMethod.POST, new HttpEntity<>(headers), String.class);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        Assertions.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         System.out.println(response.getBody());
     }
 }

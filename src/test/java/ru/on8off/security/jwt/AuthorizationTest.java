@@ -25,7 +25,7 @@ public class AuthorizationTest {
     @Test
     public void testAdmin(){
         var response = testRestTemplate.getForEntity(host + port + "/getForAdmin", String.class);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        Assertions.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
 
         MultiValueMap<String, String> headers = new HttpHeaders();
         headers.put("username", List.of("admin"));
@@ -56,7 +56,7 @@ public class AuthorizationTest {
     @Test
     public void testUser(){
         var response = testRestTemplate.getForEntity(host + port + "/getForUser", String.class);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        Assertions.assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
 
         MultiValueMap<String, String> headers = new HttpHeaders();
         headers.put("username", List.of("user"));
