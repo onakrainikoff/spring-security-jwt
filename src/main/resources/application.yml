@@ -1,0 +1,3 @@
+jwt:
+  secret: qwerty
+  expirationms: 1800000
