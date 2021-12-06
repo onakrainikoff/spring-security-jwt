@@ -13,5 +13,5 @@ public class DomainUser {
     private String username;
     private String password;
     private List<String> roles;
-    private List<String> permissions;
+    private List<String> groups;
  }

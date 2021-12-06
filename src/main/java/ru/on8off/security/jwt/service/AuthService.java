@@ -1,12 +1,13 @@
 package ru.on8off.security.jwt.service;
 
-import io.jsonwebtoken.*;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,9 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
 import ru.on8off.security.jwt.repository.DomainUserInMemoryRepository;
@@ -41,29 +40,23 @@ public class AuthService implements UserDetailsService {
 
     public String login(String username, String  password){
         var user = (User)authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password)).getPrincipal();
-        Claims claims = Jwts.claims().setSubject(user.getUsername());
         var authorities = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
-        claims.put("authorities", authorities);
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(SignatureAlgorithm.HS256, jwtSecret)
-                .compact();
+       return JWT.create().withSubject(user.getUsername())
+                .withClaim("authorities", authorities)
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs))
+               .sign(Algorithm.HMAC512(jwtSecret));
     }
 
     public void authenticate(String jwtString, WebAuthenticationDetails details) {
-        Claims claims;
+        DecodedJWT jwt;
         try {
-            claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(jwtString).getBody();
+            jwt = JWT.require(Algorithm.HMAC512(jwtSecret)).build().verify(jwtString);
         } catch (Exception e) {
-            throw new SessionAuthenticationException("Invalid JWT token");
+            throw new SessionAuthenticationException("Invalid JWT token: "+ e.getMessage());
         }
-        if(claims.getExpiration().before(new Date())){
-            throw new CredentialsExpiredException("Jwt has been expired");
-        }
-        var username = claims.getSubject();
-        var roles = Arrays.stream(claims.get("authorities", String.class).split(","))
+        var username = jwt.getSubject();
+        var roles = Arrays.stream(jwt.getClaim("authorities").asString().split(","))
                           .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
         var user = new User(username, "", roles);
@@ -79,15 +72,15 @@ public class AuthService implements UserDetailsService {
         if (domainUser == null) {
             throw new UsernameNotFoundException("Username" + username + " fot found");
         }
-        var authorities = Stream.concat(domainUser.getRoles().stream(), domainUser.getPermissions().stream())
+        var authorities = Stream.concat(domainUser.getRoles().stream(), domainUser.getGroups().stream())
                 .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
         return new User(domainUser.getUsername(), domainUser.getPassword(), authorities);
     }
 
-    public List<String> getPermissions(){
+    public List<String> getGroups(){
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("PERMISSION_"))
+                .filter(a -> a.startsWith("GROUP_"))
                 .collect(Collectors.toList());
     }
 

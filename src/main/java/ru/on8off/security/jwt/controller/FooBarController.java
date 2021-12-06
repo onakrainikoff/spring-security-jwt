@@ -22,8 +22,8 @@ public class FooBarController {
 
     @GetMapping("/getForAdminWithPermissions")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String getForAdminSecured(@RequestAttribute List<String> permissions){
-        return fooBarService.getForAdminWithPermissions(permissions);
+    public String getForAdminSecured(@RequestAttribute List<String> groups){
+        return fooBarService.getForAdminWithPermissions(groups);
     }
 
     @GetMapping("/getForUser")
@@ -34,8 +34,8 @@ public class FooBarController {
 
     @GetMapping("/getForUserWithPermissions")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public String getForUserWithPermissions(@RequestAttribute List<String> permissions){
-        return fooBarService.getForUserWithPermissions(permissions);
+    public String getForUserWithPermissions(@RequestAttribute List<String> groups){
+        return fooBarService.getForUserWithPermissions(groups);
     }
 
 }

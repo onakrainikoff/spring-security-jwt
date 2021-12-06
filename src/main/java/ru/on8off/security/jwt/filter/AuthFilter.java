@@ -25,7 +25,7 @@ public class AuthFilter extends OncePerRequestFilter {
         var authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if(StringUtils.hasLength(authHeader) && authHeader.startsWith("Bearer ")){
            authService.authenticate(authHeader.substring(7), new WebAuthenticationDetailsSource().buildDetails(request));
-            request.setAttribute("permissions", authService.getPermissions());
+           request.setAttribute("groups", authService.getGroups());
         }
         filterChain.doFilter(request, response);
     }
